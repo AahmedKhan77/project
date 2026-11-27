@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A11y Coach – accessibility feedback for your HTML</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#F2F5F7; --surface:#FFFFFF; --ink:#13233A; --muted:#4A5A6E; --line:#CDD6DF;
+  --accent:#0A5C86; --accent-ink:#FFFFFF; --accent-soft:#E1EEF5;
+  --warn:#8A4B00; --warn-soft:#FFF1DC; --err:#A3261A; --err-soft:#FCE6E3; --ok:#1C6B44; --ok-soft:#E2F3EA;
+  --focus:#C2410C;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0F1722; --surface:#172231; --ink:#E6EDF4; --muted:#A5B3C2; --line:#2C3B4E;
+  --accent:#5DB3E0; --accent-ink:#0B1520; --accent-soft:#1B3347;
+  --warn:#F5B65A; --warn-soft:#3A2A12; --err:#FF8E80; --err-soft:#3D1D1A; --ok:#6FD3A0; --ok-soft:#163327;
+  --focus:#FDBA74; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0F1722; --surface:#172231; --ink:#E6EDF4; --muted:#A5B3C2; --line:#2C3B4E;
+  --accent:#5DB3E0; --accent-ink:#0B1520; --accent-soft:#1B3347;
+  --warn:#F5B65A; --warn-soft:#3A2A12; --err:#FF8E80; --err-soft:#3D1D1A; --ok:#6FD3A0; --ok-soft:#163327;
+  --focus:#FDBA74; color-scheme:dark; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--accent);color:var(--accent-ink);padding:8px 12px;z-index:9}
+.skip:focus{left:8px}
+header.app{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding:22px 28px 16px;border-bottom:4px solid var(--accent);background:var(--surface)}
+header.app h1{margin:0;font-size:1.75rem;letter-spacing:-.01em}
+header.app p{margin:2px 0 0;color:var(--muted);max-width:60ch}
+.mode{display:flex;gap:0;border:2px solid var(--accent);border-radius:8px;overflow:hidden}
+.mode button{border:0;border-radius:0;background:transparent;color:var(--accent);padding:8px 14px;font-weight:700}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+main{padding:20px 28px 40px;max-width:1280px;margin:0 auto}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));align-items:start}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+section.panel>h2{margin:0 0 10px;font-size:1.15rem}
+h3{font-size:1rem;margin:14px 0 6px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--accent);color:var(--accent-ink);border:2px solid var(--accent);border-radius:7px;padding:7px 13px;cursor:pointer;font-weight:700}
+button.ghost{background:transparent;color:var(--accent)}
+button.small{padding:3px 9px;font-size:.88rem}
+button:disabled{opacity:.5;cursor:not-allowed}
+textarea,input[type=text],select{background:var(--bg);border:2px solid var(--line);border-radius:7px;padding:8px 10px;width:100%}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.muted{color:var(--muted)}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.82rem;font-weight:700}
+.tag.err{background:var(--err-soft);color:var(--err)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.issue{border-left:5px solid var(--err);background:var(--err-soft);border-radius:6px;padding:10px 12px;margin:10px 0}
+.issue.warn{border-color:var(--warn);background:var(--warn-soft)}
+.issue.ok{border-color:var(--ok);background:var(--ok-soft)}
+.issue h3{margin:0 0 4px}
+code.snip{display:block;white-space:pre-wrap;word-break:break-all;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:4px 7px;margin:6px 0;font-size:.82rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+footer.note{max-width:1280px;margin:0 auto;padding:0 28px 30px;color:var(--muted);font-size:.9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{header.app .mode,button{display:none}}
+
+#src{min-height:360px}
+iframe{width:100%;height:300px;border:2px solid var(--line);border-radius:7px;background:#fff}
+.count{font-size:2.2rem;font-weight:700;line-height:1}
+.fixbox{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.fixbox input{flex:1 1 180px}
+#manual{list-style:none;padding-left:0}#manual li{margin:6px 0}
+</style>
+</head>
+<body>
+<a class="skip" href="#issues">Skip to issues</a>
+<header class="app">
+  <div>
+    <h1>A11y Coach</h1>
+    <p>Paste or edit HTML. Each problem shows where it is, why it matters to a screen-reader user, and how to fix it.</p>
+  </div>
+  <div>
+    <div class="mode" role="group" aria-label="Study condition">
+      <button id="mCoach" aria-pressed="true">With coach</button>
+      <button id="mBase" aria-pressed="false">Without coach</button>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="row" style="margin-bottom:14px">
+    <label for="task" style="font-weight:700">Study task</label>
+    <select id="task" style="width:auto">
+      <option value="a">Task page A – Café sign-up</option>
+      <option value="b">Task page B – Library booking</option>
+      <option value="own">My own HTML</option>
+    </select>
+    <button class="ghost" id="reset">Reset task</button>
+    <span class="muted" id="timer" aria-live="off">0:00</span>
+  </div>
+  <div class="grid">
+    <section class="panel" aria-labelledby="hEdit">
+      <h2 id="hEdit">Your HTML</h2>
+      <label for="src" class="sr">HTML source</label>
+      <textarea id="src" spellcheck="false"></textarea>
+      <h3>Preview</h3>
+      <iframe id="preview" title="Live preview of your page" sandbox=""></iframe>
+    </section>
+    <section class="panel" id="issues" aria-labelledby="hIss" tabindex="-1">
+      <h2 id="hIss">Accessibility check</h2>
+      <div id="coachArea">
+        <div class="row" style="gap:18px">
+          <div><div class="count" id="nErr">0</div><span class="muted">problems</span></div>
+          <div><div class="count" id="nWarn">0</div><span class="muted">to review</span></div>
+        </div>
+        <p id="live" class="sr" aria-live="polite"></p>
+        <div id="list"></div>
+        <h3>Check these by hand</h3>
+        <p class="muted">A tool cannot judge meaning. Before you finish, check:</p>
+        <ul id="manual">
+          <li><label><input type="checkbox"> Each alt text says what the image shows <em>and why it is there</em>, not “image of”.</label></li>
+          <li><label><input type="checkbox"> Every link makes sense when read on its own in a list of links.</label></li>
+          <li><label><input type="checkbox"> You can reach and use every control with Tab, Enter and Space.</label></li>
+          <li><label><input type="checkbox"> Headings describe the section that follows them.</label></li>
+        </ul>
+      </div>
+      <div id="baseArea" hidden>
+        <p>Feedback is turned off for this part of the study. Fix the page using what you know, then tell the researcher when you are done.</p>
+        <p class="muted">Tip: the four task goals are readable button text, labelled form fields, clear link text and useful alt text.</p>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="note">Prototype for an Applied HCI course project (FAST-NUCES Karachi). Rule-based checks only; it does not replace a full WCAG audit or testing with screen-reader users.</footer>
+<script>
+const TASKS={
+a:`<header>
+  <h1>Bean There Café</h1>
+</header>
+<main>
+  <img src="latte.jpg" alt="image">
+  <h3>Join our rewards club</h3>
+  <p>Get a free coffee on your fifth visit.</p>
+  <form>
+    <input type="text" placeholder="Your name">
+    <input type="email" placeholder="Email">
+    <button style="color:#9CA3AF;background-color:#FFFFFF">Sign up</button>
+  </form>
+  <p>Read our rewards terms <a href="/terms">click here</a>.</p>
+</main>`,
+b:`<header>
+  <h1>City Library</h1>
+</header>
+<main>
+  <img src="reading-room.png">
+  <h4>Book a study room</h4>
+  <p>Rooms can be booked for up to two hours.</p>
+  <form>
+    <input type="text" placeholder="Library card number">
+    <input type="date">
+    <button style="color:#FFFFFF;background-color:#F4C542">Book room</button>
+  </form>
+  <p>Opening hours are <a href="/hours">here</a>.</p>
+</main>`,
+own:`<h1>My page</h1>
+<p>Paste your HTML here.</p>`};
+
+const $=s=>document.querySelector(s);
+const src=$('#src'), list=$('#list');
+let coach=true, t0=Date.now();
+setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);$('#timer').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')},1000);
+
+/* ---------- colour contrast ---------- */
+const NAMED={white:'#ffffff',black:'#000000',gray:'#808080',grey:'#808080',silver:'#c0c0c0',red:'#ff0000',yellow:'#ffff00',lightgray:'#d3d3d3',lightgrey:'#d3d3d3',blue:'#0000ff',navy:'#000080',green:'#008000'};
+function parseColor(c){
+  if(!c) return null; c=c.trim().toLowerCase(); if(NAMED[c]) c=NAMED[c];
+  let m=c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/);
+  if(m){let h=m[1]; if(h.length===3) h=h.split('').map(x=>x+x).join(''); return [0,2,4].map(i=>parseInt(h.substr(i,2),16));}
+  m=c.match(/^rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)/); if(m) return [+m[1],+m[2],+m[3]];
+  return null;
+}
+function lum(rgb){return rgb.map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)}).reduce((a,v,i)=>a+v*[0.2126,0.7152,0.0722][i],0)}
+function ratio(a,b){const L1=lum(a),L2=lum(b);return (Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05)}
+function hex(rgb){return '#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase()}
+function fixColor(fg,bg){ // darken or lighten fg until 4.5:1
+  const towardsBlack=lum(bg)>0.18; let c=fg.slice();
+  for(let i=0;i<60 && ratio(c,bg)<4.6;i++) c=c.map(v=>towardsBlack?Math.max(0,Math.round(v*0.9)):Math.min(255,Math.round(v+(255-v)*0.15)));
+  return c;
+}
+
+/* ---------- checks ---------- */
+const VAGUE=['click here','here','read more','more','link','this','click','learn more'];
+const PLACEHOLDER_ALT=['image','photo','picture','img','graphic','pic','icon','todo','alt'];
+let doc, issues=[];
+function lineOf(el){
+  const open=el.outerHTML.split('>')[0].slice(0,40);
+  const i=src.value.indexOf(open); if(i<0) return '?';
+  return src.value.slice(0,i).split('\n').length;
+}
+function hasLabel(el){
+  if(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.closest('label')) return true;
+  const id=el.id; return !!(id && doc.querySelector('label[for="'+CSS.escape(id)+'"]'));
+}
+function check(){
+  doc=new DOMParser().parseFromString('<body>'+src.value+'</body>','text/html');
+  issues=[];
+  doc.querySelectorAll('img').forEach(el=>{
+    const alt=el.getAttribute('alt');
+    if(alt===null) issues.push({el,sev:'err',title:'Image has no alt text',why:'A screen reader will read the file name (for example “latte dot jpg”) or skip the image, so the user misses what it shows.',fix:'alt',ask:'Describe what the image shows and why it is on the page'});
+    else if(PLACEHOLDER_ALT.includes(alt.trim().toLowerCase())||/\.(jpe?g|png|gif|webp)$/i.test(alt)) issues.push({el,sev:'err',title:'Alt text is a placeholder',why:'“'+alt+'” tells a screen-reader user nothing. Placeholder alt text was the most common mistake in the CodeA11y study.',fix:'alt',ask:'Replace with a real description'});
+    else if(alt==='') issues.push({el,sev:'warn',title:'Image is marked as decorative',why:'Empty alt hides the image from screen readers. That is right only if the image adds no information.',fix:null});
+  });
+  doc.querySelectorAll('input:not([type=hidden]):not([type=submit]):not([type=button]),select,textarea').forEach(el=>{
+    if(!hasLabel(el)) issues.push({el,sev:'err',title:'Form field has no label',why:'Placeholder text is not a label. Many screen readers announce only “edit text”, and the hint disappears once the user starts typing.',fix:'label',ask:'Label text for this field',pre:el.getAttribute('placeholder')||''});
+  });
+  doc.querySelectorAll('a').forEach(el=>{
+    const t=(el.getAttribute('aria-label')||el.textContent).trim().toLowerCase();
+    if(!t) issues.push({el,sev:'err',title:'Link has no text',why:'A screen reader announces only “link”.',fix:'link',ask:'Say where the link goes'});
+    else if(VAGUE.includes(t)) issues.push({el,sev:'err',title:'Link text is vague: “'+el.textContent.trim()+'”',why:'Screen-reader users often jump through a list of links. “'+el.textContent.trim()+'” makes no sense out of context.',fix:'link',ask:'Say where the link goes'});
+  });
+  doc.querySelectorAll('button,[role=button]').forEach(el=>{
+    if(!(el.textContent.trim()||el.getAttribute('aria-label'))) issues.push({el,sev:'err',title:'Button has no name',why:'The button is announced only as “button”.',fix:'aria',ask:'What does the button do?'});
+  });
+  doc.querySelectorAll('[style]').forEach(el=>{
+    const st=el.style; const fg=parseColor(st.color); if(!fg) return;
+    const bg=parseColor(st.backgroundColor||st.background)||[255,255,255];
+    const r=ratio(fg,bg);
+    if(r<4.5) issues.push({el,sev:'err',title:'Low text contrast ('+r.toFixed(2)+':1)',why:'WCAG asks for at least 4.5:1 for normal text. Low-vision users may not be able to read this.',fix:'contrast',newColor:hex(fixColor(fg,bg)),bg});
+  });
+  let last=0;
+  doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el=>{
+    const lv=+el.tagName[1];
+    if(last && lv>last+1) issues.push({el,sev:'err',title:'Heading level skipped (h'+last+' to h'+lv+')',why:'Screen-reader users move by heading level. A skipped level suggests missing content.',fix:'heading',to:last+1});
+    last=lv;
+  });
+  render();
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function render(){
+  const errs=issues.filter(i=>i.sev==='err').length, warns=issues.length-errs;
+  $('#nErr').textContent=errs; $('#nWarn').textContent=warns;
+  $('#live').textContent=errs+' problems, '+warns+' to review.';
+  list.innerHTML='';
+  if(!issues.length){list.innerHTML='<div class="issue ok"><h3>No automatic problems found</h3><p>Now work through the “check by hand” list below.</p></div>';}
+  issues.forEach((it,i)=>{
+    const d=document.createElement('div'); d.className='issue'+(it.sev==='warn'?' warn':'');
+    let fx='';
+    if(it.fix==='contrast') fx=`<div class="fixbox"><button class="small" data-i="${i}">Use ${it.newColor} (passes 4.5:1)</button></div>`;
+    else if(it.fix==='heading') fx=`<div class="fixbox"><button class="small" data-i="${i}">Change to h${it.to}</button></div>`;
+    else if(it.fix) fx=`<div class="fixbox"><label class="sr" for="f${i}">${esc(it.ask)}</label><input type="text" id="f${i}" placeholder="${esc(it.ask)}" value="${esc(it.pre||'')}"><button class="small" data-i="${i}">Apply fix</button></div>`;
+    d.innerHTML=`<h3><span class="tag ${it.sev==='err'?'err':'warn'}">${it.sev==='err'?'Problem':'Review'}</span> ${esc(it.title)}</h3>
+      <span class="muted">Line ${lineOf(it.el)}</span><code class="snip">${esc(it.el.outerHTML.slice(0,120))}</code>
+      <p style="margin:4px 0">${esc(it.why)}</p>${fx}`;
+    list.appendChild(d);
+  });
+  $('#preview').srcdoc='<!doctype html><html><body style="font-family:sans-serif">'+src.value+'</body></html>';
+}
+list.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-i]'); if(!b) return;
+  const it=issues[+b.dataset.i], el=it.el; const inp=b.parentElement.querySelector('input'); const v=inp?inp.value.trim():'';
+  if(inp && !v){inp.focus(); $('#live').textContent='Type the text first.'; return;}
+  if(it.fix==='alt') el.setAttribute('alt',v);
+  if(it.fix==='aria') el.setAttribute('aria-label',v);
+  if(it.fix==='link') el.textContent=v;
+  if(it.fix==='label'){ const id=el.id||('field-'+Math.random().toString(36).slice(2,7)); el.id=id; const lb=doc.createElement('label'); lb.setAttribute('for',id); lb.textContent=v; el.before(lb, doc.createTextNode('\n    ')); }
+  if(it.fix==='contrast') el.style.color=it.newColor;
+  if(it.fix==='heading'){ const n=doc.createElement('h'+it.to); n.innerHTML=el.innerHTML; el.replaceWith(n); }
+  src.value=doc.body.innerHTML; check(); $('#live').textContent='Fixed. '+$('#live').textContent; $('#issues').focus();
+});
+function load(k){src.value=TASKS[k]; t0=Date.now(); check();}
+$('#task').onchange=e=>load(e.target.value);
+$('#reset').onclick=()=>load($('#task').value);
+let deb; src.addEventListener('input',()=>{clearTimeout(deb);deb=setTimeout(check,300)});
+function setMode(c){coach=c; $('#mCoach').setAttribute('aria-pressed',c); $('#mBase').setAttribute('aria-pressed',!c); $('#coachArea').hidden=!c; $('#baseArea').hidden=c;}
+$('#mCoach').onclick=()=>setMode(true); $('#mBase').onclick=()=>setMode(false);
+load('a');
+</script>
+</body>
+</html>

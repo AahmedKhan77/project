@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ResumeLens – see what an automated screener reads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#F2F5F7; --surface:#FFFFFF; --ink:#13233A; --muted:#4A5A6E; --line:#CDD6DF;
+  --accent:#0A5C86; --accent-ink:#FFFFFF; --accent-soft:#E1EEF5;
+  --warn:#8A4B00; --warn-soft:#FFF1DC; --err:#A3261A; --err-soft:#FCE6E3; --ok:#1C6B44; --ok-soft:#E2F3EA;
+  --focus:#C2410C;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0F1722; --surface:#172231; --ink:#E6EDF4; --muted:#A5B3C2; --line:#2C3B4E;
+  --accent:#5DB3E0; --accent-ink:#0B1520; --accent-soft:#1B3347;
+  --warn:#F5B65A; --warn-soft:#3A2A12; --err:#FF8E80; --err-soft:#3D1D1A; --ok:#6FD3A0; --ok-soft:#163327;
+  --focus:#FDBA74; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0F1722; --surface:#172231; --ink:#E6EDF4; --muted:#A5B3C2; --line:#2C3B4E;
+  --accent:#5DB3E0; --accent-ink:#0B1520; --accent-soft:#1B3347;
+  --warn:#F5B65A; --warn-soft:#3A2A12; --err:#FF8E80; --err-soft:#3D1D1A; --ok:#6FD3A0; --ok-soft:#163327;
+  --focus:#FDBA74; color-scheme:dark; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--accent);color:var(--accent-ink);padding:8px 12px;z-index:9}
+.skip:focus{left:8px}
+header.app{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding:22px 28px 16px;border-bottom:4px solid var(--accent);background:var(--surface)}
+header.app h1{margin:0;font-size:1.75rem;letter-spacing:-.01em}
+header.app p{margin:2px 0 0;color:var(--muted);max-width:60ch}
+.mode{display:flex;gap:0;border:2px solid var(--accent);border-radius:8px;overflow:hidden}
+.mode button{border:0;border-radius:0;background:transparent;color:var(--accent);padding:8px 14px;font-weight:700}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+main{padding:20px 28px 40px;max-width:1280px;margin:0 auto}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));align-items:start}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+section.panel>h2{margin:0 0 10px;font-size:1.15rem}
+h3{font-size:1rem;margin:14px 0 6px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--accent);color:var(--accent-ink);border:2px solid var(--accent);border-radius:7px;padding:7px 13px;cursor:pointer;font-weight:700}
+button.ghost{background:transparent;color:var(--accent)}
+button.small{padding:3px 9px;font-size:.88rem}
+button:disabled{opacity:.5;cursor:not-allowed}
+textarea,input[type=text],select{background:var(--bg);border:2px solid var(--line);border-radius:7px;padding:8px 10px;width:100%}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.muted{color:var(--muted)}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.82rem;font-weight:700}
+.tag.err{background:var(--err-soft);color:var(--err)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.issue{border-left:5px solid var(--err);background:var(--err-soft);border-radius:6px;padding:10px 12px;margin:10px 0}
+.issue.warn{border-color:var(--warn);background:var(--warn-soft)}
+.issue.ok{border-color:var(--ok);background:var(--ok-soft)}
+.issue h3{margin:0 0 4px}
+code.snip{display:block;white-space:pre-wrap;word-break:break-all;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:4px 7px;margin:6px 0;font-size:.82rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+footer.note{max-width:1280px;margin:0 auto;padding:0 28px 30px;color:var(--muted);font-size:.9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{header.app .mode,button{display:none}}
+
+#cv{min-height:420px}
+dl.profile{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:0}
+dl.profile dt{font-weight:700}
+dl.profile dd{margin:0}
+.missing{color:var(--err);font-weight:700}
+.match{font-size:2.4rem;font-weight:700;line-height:1}
+.chip{display:inline-block;border:1.5px solid var(--line);border-radius:6px;padding:0 7px;margin:2px;font-size:.9rem}
+.chip.hit{border-color:var(--ok);color:var(--ok)}
+.chip.miss{border-color:var(--err);color:var(--err);border-style:dashed}
+</style>
+</head>
+<body>
+<a class="skip" href="#lens">Skip to screener view</a>
+<header class="app">
+  <div>
+    <h1>ResumeLens</h1>
+    <p>See the profile an automated resume screener could build from your resume, before you apply. Change the text and watch the profile update.</p>
+  </div>
+  <div class="mode" role="group" aria-label="Study condition">
+    <button id="mOn" aria-pressed="true">With ResumeLens</button>
+    <button id="mOff" aria-pressed="false">Without</button>
+  </div>
+</header>
+<main>
+  <section class="panel" style="margin-bottom:20px" aria-labelledby="hJob">
+    <h2 id="hJob">Job post: Junior Web Developer (Internship)</h2>
+    <p style="margin:0">We need a student who knows <strong>JavaScript, React, HTML, CSS, Git</strong> and <strong>SQL</strong>, with at least <strong>1 year</strong> of project or work experience. Experience with <strong>accessibility</strong> and <strong>REST APIs</strong> is a plus.</p>
+  </section>
+  <div class="grid">
+    <section class="panel" aria-labelledby="hCv">
+      <h2 id="hCv">Your resume (plain text)</h2>
+      <div class="row" style="margin-bottom:8px"><button class="ghost small" id="sample">Load resume A</button><button class="ghost small" id="sampleB">Load resume B</button><button class="ghost small" id="clear">Clear</button></div>
+      <label for="cv" class="sr">Resume text</label>
+      <textarea id="cv" spellcheck="true"></textarea>
+    </section>
+    <section class="panel" id="lens" aria-labelledby="hLens" tabindex="-1">
+      <h2 id="hLens">What the screener saw</h2>
+      <div id="onArea">
+        <div class="row" style="gap:18px;margin-bottom:10px">
+          <div><div class="match" id="score">0%</div><span class="muted">keyword match</span></div>
+          <div><div class="match" id="nWarn">0</div><span class="muted">reading problems</span></div>
+        </div>
+        <p class="sr" aria-live="polite" id="live"></p>
+        <dl class="profile" id="profile"></dl>
+        <h3>Required skills</h3><div id="skills"></div>
+        <h3>Possible misreadings</h3><div id="warns"></div>
+        <h3>Ask someone you trust</h3>
+        <p class="muted" style="margin-top:0">Copies the screener view and your warnings so a friend, mentor or career counsellor can comment.</p>
+        <button id="share">Copy for review</button>
+      </div>
+      <div id="offArea" hidden><p>The screener view is hidden in this part of the study. Edit your resume for the job post using your own judgement, then tell the researcher when you are done.</p></div>
+    </section>
+  </div>
+</main>
+<footer class="note">Teaching model of a keyword-based resume screener for an Applied HCI course project (FAST-NUCES Karachi), inspired by Imteyaz et al. (2026). Real hiring systems differ and are usually not transparent; this tool shows common failure patterns, not any company’s actual system.</footer>
+<script>
+const SAMPLE=`AYESHA RAZA
+ayesha.raza [at] mail.com | 0300 1234567 | Karachi
+
+MY JOURNEY
+Frontend Volunteer | Blind Welfare Society | 2023 – Present
+• Built an accessible donation page in JS and ReactJS
+• Tested pages with NVDA screen reader
+
+Teaching Assistant | FAST-NUCES
+• Helped 60 students with HTML/CSS labs
+
+THINGS I'M GOOD AT
+JS | React.js | Git | MySQL | Screen readers | Accessibility testing
+
+EDUCATION
+BS Computer Science, FAST-NUCES Karachi, 2022 – 2026`;
+const SAMPLE_B=`Bilal Ahmed
+Email: bilal.ahmed(at)mail.com    Phone: 0321 7654321
+
+ABOUT ME
+Final-year CS student who enjoys building web apps.
+
+WHAT I HAVE DONE
+Web Intern	Softech Solutions	Summer 2025
+Built dashboards with React and connected them to a Node API
+Final Year Project	Campus Bus Tracker
+Live bus map using JS, HTML5, CSS3 and Postgres
+
+TOOLS
+Javascript (ES6) / ReactJS / GitHub / PostgreSQL
+
+EDUCATION
+BS Computer Science, FAST-NUCES Karachi, 2022 – 2026`;
+const REQ=[{k:'JavaScript',re:/\bjavascript\b/i,alias:/\bjs\b/i},{k:'React',re:/\breact\b(?!\.?js)/i,alias:/react\.?js/i},{k:'HTML',re:/\bhtml\b/i},{k:'CSS',re:/\bcss\b/i},{k:'Git',re:/\bgit\b/i},{k:'SQL',re:/\bsql\b/i,alias:/mysql|postgres/i}];
+const PLUS=[{k:'Accessibility',re:/accessibility/i},{k:'REST APIs',re:/\brest\b/i}];
+const STD=['experience','work experience','education','skills','projects','summary','certifications','achievements'];
+const $=s=>document.querySelector(s);
+const MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function parse(t){
+  const lines=t.split('\n'), w=[]; const prof={};
+  const nonBlank=lines.filter(l=>l.trim());
+  prof.Name=nonBlank[0]?nonBlank[0].trim():'';
+  const em=t.match(/[\w.+-]+@[\w-]+\.[\w.]+/); prof.Email=em?em[0]:'';
+  if(!em && /\[at\]|\(at\)/i.test(t)) w.push({s:'err',m:'Your email is written as “[at]”. Screeners look for a normal address (name@site.com), so the employer may have no way to contact you.'});
+  const ph=t.match(/(\+?\d[\d\s-]{8,}\d)/); prof.Phone=ph?ph[0].trim():'';
+  // sections: a heading is a short line in capitals or ending with ':'
+  let sec='top', secs={top:[]}; const unknownHead=[];
+  lines.forEach(l=>{const s=l.trim(); if(!s) return;
+    const isHead=s.length<40 && (s===s.toUpperCase() && /[A-Z]/.test(s) && !/[|@]/.test(s) || /:$/.test(s));
+    if(isHead && s!==prof.Name){ const h=s.replace(/:$/,'').toLowerCase(); if(STD.includes(h)){sec=h.includes('experience')?'experience':h;} else {sec='unknown:'+s; unknownHead.push(s);} secs[sec]=secs[sec]||[]; return;}
+    (secs[sec]=secs[sec]||[]).push(s);});
+  unknownHead.forEach(h=>w.push({s:'err',m:`The heading “${h}” is not a standard section name. Many screeners ignore text under headings they do not recognise. Try “Experience”, “Skills”, “Projects” or “Education”.`}));
+  const expLines=(secs.experience||[]);
+  // dates
+  const ranges=[]; let undated=0;
+  expLines.forEach(l=>{ if(/^[•\-*]/.test(l)) return;
+    const m=l.match(/((?:[A-Za-z]{3,9}\s+)?(20\d\d))\s*[–-]\s*((?:[A-Za-z]{3,9}\s+)?(20\d\d)|present|current|now)/i);
+    if(m){const s=new Date(+m[2],MON[(m[1].split(/\s+/)[0]||'').slice(0,3).toLowerCase()]??0); const e=/present|current|now/i.test(m[3])?new Date():new Date(+m[4],MON[(m[3].split(/\s+/)[0]||'').slice(0,3).toLowerCase()]??11); ranges.push([s,e]);}
+    else undated++; });
+  const srt=ranges.slice().sort((a,b)=>a[0]-b[0]); const merged=[]; srt.forEach(([s,e])=>{const m=merged[merged.length-1]; if(m&&s<=m[1]) m[1]=new Date(Math.max(m[1],e)); else merged.push([s,e]);});
+  let months=0; merged.forEach(([s,e])=>months+=Math.max(0,(e-s)/2.63e9));
+  prof['Experience counted']= expLines.length? (months/12).toFixed(1)+' years':'0 years (no Experience section found)';
+  if(!expLines.length) w.push({s:'err',m:'No “Experience” section was found, so the screener counts 0 years of experience, even if you have some.'});
+  if(undated) w.push({s:'warn',m:`${undated} role${undated>1?'s have':' has'} no dates. Undated roles are usually counted as zero time.`});
+  for(let i=1;i<merged.length;i++){ const gap=(merged[i][0]-merged[i-1][1])/2.63e9; if(gap>6) w.push({s:'warn',m:`A gap of about ${Math.round(gap)} months appears between roles. Some screeners flag gaps automatically. You decide whether to explain it; you are not required to share health or disability information.`}); }
+  // skills: only from a recognised Skills section, like many ATS
+  const skillText=(secs.skills||[]).join(' ');
+  const allText=t;
+  const sk=REQ.map(r=>{const hit=r.re.test(skillText), aliasHit=!!(r.alias&&r.alias.test(allText)); return {...r,hit,aliasHit};});
+  if(!secs.skills) w.push({s:'err',m:'No section titled “Skills” was found, so the screener counted none of your skills. Put your skills under a heading called “Skills”.'});
+  sk.forEach(r=>{ if(!r.hit && r.aliasHit && !r.re.test(allText)) w.push({s:'warn',m:`The job asks for “${r.k}”, but your resume says “${allText.match(r.alias)[0]}”. Simple screeners may not treat these as the same, so use the job’s wording.`}); });
+  if(/\|/.test(skillText)||/\t/.test(t)) w.push({s:'warn',m:'Skills separated by “|” or tabs (table-style layouts) are sometimes merged into one long word. Commas are safer.'});
+  if(/[•●▪]/.test(t)) w.push({s:'ok',m:'Bullet symbols were read correctly here, but some systems drop them. Keep each bullet a full sentence.'});
+  const plus=PLUS.filter(p=>p.re.test(skillText));
+  prof.Education=(secs.education||[]).join('; ');
+  return {prof,sk,plus,w};
+}
+function render(){
+  const r=parse($('#cv').value);
+  const hits=r.sk.filter(s=>s.hit).length, score=Math.round(hits/r.sk.length*100);
+  $('#score').textContent=score+'%';
+  const nW=r.w.filter(x=>x.s!=='ok').length; $('#nWarn').textContent=nW;
+  $('#profile').innerHTML=Object.entries(r.prof).map(([k,v])=>`<dt>${k}</dt><dd>${v?v.replace(/</g,'&lt;'):'<span class="missing">Not found</span>'}</dd>`).join('');
+  $('#skills').innerHTML=r.sk.map(s=>`<span class="chip ${s.hit?'hit':'miss'}">${s.hit?'Found':'Missing'}: ${s.k}</span>`).join('')+(r.plus.length?'<br><span class="muted">Plus: '+r.plus.map(p=>p.k).join(', ')+'</span>':'');
+  $('#warns').innerHTML=r.w.length?r.w.map(x=>`<div class="issue ${x.s==='err'?'':x.s}"><p style="margin:0">${x.m}</p></div>`).join(''):'<div class="issue ok"><p style="margin:0">No reading problems found.</p></div>';
+  $('#live').textContent=`Keyword match ${score} percent, ${nW} reading problems.`;
+  window._last=r;
+}
+let deb; $('#cv').addEventListener('input',()=>{clearTimeout(deb);deb=setTimeout(render,350)});
+$('#sample').onclick=()=>{$('#cv').value=SAMPLE;render();};
+$('#sampleB').onclick=()=>{$('#cv').value=SAMPLE_B;render();};
+$('#clear').onclick=()=>{$('#cv').value='';render();$('#cv').focus();};
+$('#share').onclick=async()=>{const r=window._last; const txt='ResumeLens review request\n\nScreener profile:\n'+Object.entries(r.prof).map(([k,v])=>`${k}: ${v||'NOT FOUND'}`).join('\n')+'\n\nSkills found: '+r.sk.filter(s=>s.hit).map(s=>s.k).join(', ')+'\nSkills missed: '+r.sk.filter(s=>!s.hit).map(s=>s.k).join(', ')+'\n\nWarnings:\n'+r.w.map(x=>'- '+x.m).join('\n')+'\n\nResume:\n'+$('#cv').value;
+  try{await navigator.clipboard.writeText(txt);$('#live').textContent='Copied. Paste it into a message to someone you trust.';}catch(e){$('#live').textContent='Copy failed.';}};
+function setMode(on){$('#mOn').setAttribute('aria-pressed',on);$('#mOff').setAttribute('aria-pressed',!on);$('#onArea').hidden=!on;$('#offArea').hidden=on;}
+$('#mOn').onclick=()=>setMode(true);$('#mOff').onclick=()=>setMode(false);
+$('#cv').value=SAMPLE; render();
+</script>
+</body>
+</html>

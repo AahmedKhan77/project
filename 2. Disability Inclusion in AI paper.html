@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inclusive AI Checklist – disability review for AI features</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#F2F5F7; --surface:#FFFFFF; --ink:#13233A; --muted:#4A5A6E; --line:#CDD6DF;
+  --accent:#0A5C86; --accent-ink:#FFFFFF; --accent-soft:#E1EEF5;
+  --warn:#8A4B00; --warn-soft:#FFF1DC; --err:#A3261A; --err-soft:#FCE6E3; --ok:#1C6B44; --ok-soft:#E2F3EA;
+  --focus:#C2410C;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0F1722; --surface:#172231; --ink:#E6EDF4; --muted:#A5B3C2; --line:#2C3B4E;
+  --accent:#5DB3E0; --accent-ink:#0B1520; --accent-soft:#1B3347;
+  --warn:#F5B65A; --warn-soft:#3A2A12; --err:#FF8E80; --err-soft:#3D1D1A; --ok:#6FD3A0; --ok-soft:#163327;
+  --focus:#FDBA74; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0F1722; --surface:#172231; --ink:#E6EDF4; --muted:#A5B3C2; --line:#2C3B4E;
+  --accent:#5DB3E0; --accent-ink:#0B1520; --accent-soft:#1B3347;
+  --warn:#F5B65A; --warn-soft:#3A2A12; --err:#FF8E80; --err-soft:#3D1D1A; --ok:#6FD3A0; --ok-soft:#163327;
+  --focus:#FDBA74; color-scheme:dark; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--accent);color:var(--accent-ink);padding:8px 12px;z-index:9}
+.skip:focus{left:8px}
+header.app{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding:22px 28px 16px;border-bottom:4px solid var(--accent);background:var(--surface)}
+header.app h1{margin:0;font-size:1.75rem;letter-spacing:-.01em}
+header.app p{margin:2px 0 0;color:var(--muted);max-width:60ch}
+.mode{display:flex;gap:0;border:2px solid var(--accent);border-radius:8px;overflow:hidden}
+.mode button{border:0;border-radius:0;background:transparent;color:var(--accent);padding:8px 14px;font-weight:700}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+main{padding:20px 28px 40px;max-width:1280px;margin:0 auto}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));align-items:start}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+section.panel>h2{margin:0 0 10px;font-size:1.15rem}
+h3{font-size:1rem;margin:14px 0 6px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--accent);color:var(--accent-ink);border:2px solid var(--accent);border-radius:7px;padding:7px 13px;cursor:pointer;font-weight:700}
+button.ghost{background:transparent;color:var(--accent)}
+button.small{padding:3px 9px;font-size:.88rem}
+button:disabled{opacity:.5;cursor:not-allowed}
+textarea,input[type=text],select{background:var(--bg);border:2px solid var(--line);border-radius:7px;padding:8px 10px;width:100%}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.muted{color:var(--muted)}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.82rem;font-weight:700}
+.tag.err{background:var(--err-soft);color:var(--err)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.issue{border-left:5px solid var(--err);background:var(--err-soft);border-radius:6px;padding:10px 12px;margin:10px 0}
+.issue.warn{border-color:var(--warn);background:var(--warn-soft)}
+.issue.ok{border-color:var(--ok);background:var(--ok-soft)}
+.issue h3{margin:0 0 4px}
+code.snip{display:block;white-space:pre-wrap;word-break:break-all;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:4px 7px;margin:6px 0;font-size:.82rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+footer.note{max-width:1280px;margin:0 auto;padding:0 28px 30px;color:var(--muted);font-size:.9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{header.app .mode,button{display:none}}
+
+.stages{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.stages button{background:transparent;color:var(--accent)}
+.stages button[aria-current="step"]{background:var(--accent);color:var(--accent-ink)}
+fieldset{border:1px solid var(--line);border-radius:8px;margin:10px 0;padding:10px 12px}
+legend{font-weight:700;padding:0 4px}
+.ans{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.ans label{display:flex;gap:5px;align-items:center}
+.help{background:var(--accent-soft);border-radius:6px;padding:6px 10px;margin-top:8px;font-size:.92rem}
+.score{font-size:3rem;font-weight:700;line-height:1}
+.bar{height:12px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0 12px}
+.bar>span{display:block;height:100%;background:var(--accent)}
+.spec{font-size:.95rem}
+.spec h3{margin-top:0}
+ol#actions li{margin:8px 0}
+</style>
+</head>
+<body>
+<a class="skip" href="#review">Skip to review</a>
+<header class="app">
+  <div>
+    <h1>Inclusive AI Checklist</h1>
+    <p>Walk an AI feature through four stages and finish with a ranked list of risks for people with disabilities.</p>
+  </div>
+  <div class="mode" role="group" aria-label="Study condition">
+    <button id="mOn" aria-pressed="true">With checklist</button>
+    <button id="mOff" aria-pressed="false">Unaided review</button>
+  </div>
+</header>
+<main>
+  <div class="grid">
+    <section class="panel spec" aria-labelledby="hSpec">
+      <h2 id="hSpec">Feature to review</h2>
+      <label for="feat" class="sr">Choose a feature</label>
+      <select id="feat" style="margin-bottom:10px"></select>
+      <div id="specText"></div>
+      <h3><label for="risks">Risks you found (one per line)</label></h3>
+      <textarea id="risks" rows="7" placeholder="Example: Users who stutter may be cut off by the silence timeout."></textarea>
+      <p class="muted" id="riskCount">0 risks listed</p>
+    </section>
+    <section class="panel" id="review" aria-labelledby="hRev">
+      <h2 id="hRev">Review</h2>
+      <div id="onArea">
+        <nav class="stages" aria-label="Review stages" id="stageNav"></nav>
+        <div id="stageBody"></div>
+        <div class="row" style="margin-top:10px"><button class="ghost" id="prev">Previous stage</button><button id="next">Next stage</button></div>
+      </div>
+      <div id="offArea" hidden><p>Read the feature description and list every risk you can think of for users with disabilities in the box on the left. Tell the researcher when you are done.</p></div>
+    </section>
+  </div>
+  <section class="panel" id="result" aria-labelledby="hRes" style="margin-top:20px" hidden>
+    <h2 id="hRes">Readiness and action list</h2>
+    <div class="grid">
+      <div>
+        <div class="score" id="score">0</div><span class="muted">readiness out of 100</span>
+        <div class="bar" aria-hidden="true"><span id="bar" style="width:0"></span></div>
+        <p id="verdict"></p>
+        <h3>Decision log</h3>
+        <div id="logView" class="muted">No conflicts recorded.</div>
+      </div>
+      <div>
+        <h3>Prioritised actions</h3>
+        <ol id="actions"></ol>
+        <div class="row"><button id="copy">Copy action list</button><button class="ghost" onclick="window.print()">Print</button></div>
+        <p class="sr" aria-live="polite" id="live"></p>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="note">Prototype for an Applied HCI course project (FAST-NUCES Karachi), based on the recommendations of Moharana et al., AIES 2025. Questions are a starting point, not a compliance standard.</footer>
+<script>
+const FEATURES={
+voice:{name:'Feature A – “AskBank” voice chatbot',spec:`<h3>AskBank voice assistant</h3><p>Customers call the bank and speak to an AI assistant that answers balance and card questions. It uses a speech-to-text model trained on recorded customer calls, and ends a turn after 1.5 seconds of silence. To confirm identity, the caller must repeat a 6-digit code that the assistant reads out once. If the model is not confident it says “Sorry, I didn’t get that” and after three failures the call is closed. The team plans to launch in two months and will test with 200 employees.</p>`},
+photo:{name:'Feature B – “SnapSort” photo description',spec:`<h3>SnapSort photo descriptions</h3><p>A shopping app adds AI-written descriptions to product photos uploaded by sellers. Descriptions are shown under each photo and also used as the image’s alt text. The model was fine-tuned on 50,000 product photos with descriptions written by the marketing team. Descriptions are capped at 12 words to keep the page tidy. The model sometimes guesses colours on dark photos. Release is planned with an A/B test measuring clicks.</p>`}
+};
+/* weight: 3 = high impact, 2 = medium, 1 = low */
+const STAGES=[
+ {name:'Data',qs:[
+  {q:'Does the training or test data include people with disabilities (for example speech differences, screen-reader use, low vision)?',w:3,risk:'Model may fail for disabled users who are missing from the data.',who:'Disability employee resource group; accessibility research team'},
+  {q:'Was the data labelled or written by people who understand how disabled people use this feature?',w:2,risk:'Labels may reflect sighted or non-disabled assumptions.',who:'Accessibility specialists; paid disabled annotators'},
+  {q:'Have you checked whether disability-related data could reveal a person’s disability without consent?',w:2,risk:'Privacy harm: the system may infer or expose disability.',who:'Privacy or responsible-AI reviewer'}]},
+ {name:'Design',qs:[
+  {q:'Can every step be completed by voice, keyboard and screen reader alone, and without relying on speed?',w:3,risk:'Timeouts or single-modality steps lock out some users.',who:'Accessibility (WCAG) specialist'},
+  {q:'When the AI is unsure or wrong, can the user easily notice, correct it, or reach a human?',w:3,risk:'Errors are silent and the user is stuck with no fallback.',who:'UX research; customer support lead'},
+  {q:'Is information given in more than one way (for example a code that is both spoken and sent by text)?',w:2,risk:'Memory-heavy or single-channel steps exclude users with cognitive or sensory disabilities.',who:'UX design; cognitive-accessibility reference'}]},
+ {name:'Testing',qs:[
+  {q:'Will disabled users test the feature before launch (not only simulated testing)?',w:3,risk:'Problems will be found only after launch, by real users.',who:'Accessibility research team; disability organisations'},
+  {q:'Are error rates reported separately for disabled user groups, not only as one average?',w:2,risk:'Averages hide large failures for small groups.',who:'Data science; responsible-AI team'},
+  {q:'Does the success metric measure whether users completed their task, not only clicks or speed?',w:1,risk:'A feature can “succeed” on clicks while failing disabled users.',who:'Product analytics'}]},
+ {name:'Release',qs:[
+  {q:'Is there a clear way for users to report accessibility problems, and an owner who must respond?',w:2,risk:'Reports go nowhere; no one owns the fix.',who:'Product owner; support team'},
+  {q:'Where accessibility advice and responsible-AI advice disagree, has the decision been written down with who made it?',w:2,risk:'Conflicts are decided informally and the reasoning is lost.',who:'Responsible-AI and accessibility leads together',log:true},
+  {q:'Is there a plan to fix accessibility issues found after launch within a set time?',w:1,risk:'Accessibility bugs stay in the backlog indefinitely.',who:'Engineering manager'}]}
+];
+const $=s=>document.querySelector(s);
+let stage=0, answers={}, logs={};
+function key(s,q){return s+'-'+q}
+function drawNav(){
+  $('#stageNav').innerHTML=STAGES.map((s,i)=>`<button ${i===stage?'aria-current="step"':''} data-s="${i}">${i+1}. ${s.name}</button>`).join('')+`<button data-s="4" ${stage===4?'aria-current="step"':''}>Results</button>`;
+}
+function drawStage(){
+  drawNav();
+  $('#result').hidden=stage!==4;
+  $('#prev').parentElement.hidden=stage===4;
+  if(stage===4){$('#stageBody').innerHTML='<p>Your results are below. Change any answer by choosing a stage above.</p>'; results(); $('#result').scrollIntoView(); return;}
+  const S=STAGES[stage];
+  $('#stageBody').innerHTML=`<h3>Stage ${stage+1} of 4: ${S.name}</h3>`+S.qs.map((x,qi)=>{
+    const k=key(stage,qi), a=answers[k]||'';
+    return `<fieldset><legend>${x.q}</legend><div class="ans">${['yes','no','unsure'].map(v=>`<label><input type="radio" name="q${k}" value="${v}" ${a===v?'checked':''} data-k="${k}"> ${v[0].toUpperCase()+v.slice(1)}</label>`).join('')}</div>
+      ${a==='unsure'?`<div class="help"><strong>Who can help:</strong> ${x.who}</div>`:''}
+            ${x.log?`<div style="margin-top:8px"><label for="log${k}"><strong>Decision log:</strong> describe any conflict, the choice made, and who made it</label><input type="text" id="log${k}" data-log="${k}" value="${(logs[k]||'').replace(/"/g,'&quot;')}" placeholder="e.g. Kept 12-word cap for tidiness – decided by PM, accessibility lead disagreed"></div>`:''}
+    </fieldset>`}).join('');
+  $('#prev').disabled=stage===0; $('#next').textContent=stage===3?'See results':'Next stage';
+}
+document.addEventListener('change',e=>{ if(e.target.dataset.k){answers[e.target.dataset.k]=e.target.value; const id=e.target.id; drawStage(); document.querySelector(`input[name="q${e.target.dataset.k}"][value="${e.target.value}"]`).focus();} });
+document.addEventListener('input',e=>{ if(e.target.dataset.log) logs[e.target.dataset.log]=e.target.value; if(e.target.id==='risks') countRisks(); });
+$('#stageNav').addEventListener('click',e=>{const b=e.target.closest('button'); if(b){stage=+b.dataset.s; drawStage();}});
+$('#prev').onclick=()=>{stage=Math.max(0,stage-1);drawStage()};
+$('#next').onclick=()=>{stage=Math.min(4,stage+1);drawStage()};
+function results(){
+  let total=0, got=0, acts=[];
+  STAGES.forEach((S,si)=>S.qs.forEach((x,qi)=>{
+    const a=answers[key(si,qi)]; total+=x.w;
+    if(a==='yes') got+=x.w; else if(a==='unsure') got+=x.w*0.25;
+    if(a!=='yes') acts.push({...x,stage:S.name,a:a||'not answered',p:x.w*(a==='no'?2:a==='unsure'?1.5:1)});
+  }));
+  const sc=Math.round(got/total*100);
+  $('#score').textContent=sc; $('#bar').style.width=sc+'%';
+  $('#verdict').textContent= sc>=80?'Ready, with the actions below.': sc>=50?'Not ready: fix the high-priority items first.':'Not ready: major disability risks are unresolved.';
+  acts.sort((a,b)=>b.p-a.p);
+  $('#actions').innerHTML=acts.map(x=>`<li><span class="tag ${x.p>=4?'err':'warn'}">${x.p>=4?'High':'Medium'}</span> <strong>${x.stage}:</strong> ${x.risk} <span class="muted">(${x.a==='not answered'?'not answered':'answered '+x.a}; ask ${x.who})</span></li>`).join('')||'<li>No open risks.</li>';
+  const L=Object.entries(logs).filter(([k,v])=>v.trim());
+  $('#logView').innerHTML=L.length?L.map(([k,v])=>`<p>${v.replace(/</g,'&lt;')}</p>`).join(''):'No conflicts recorded.';
+}
+$('#copy').onclick=async()=>{
+  const txt=[...document.querySelectorAll('#actions li')].map((l,i)=>(i+1)+'. '+l.textContent).join('\n');
+  try{await navigator.clipboard.writeText('Inclusive AI Checklist – '+FEATURES[$('#feat').value].name+'\nReadiness: '+$('#score').textContent+'/100\n'+txt); $('#live').textContent='Action list copied.';}catch(e){$('#live').textContent='Copy failed. Select the list and copy it manually.';}
+};
+function countRisks(){const n=$('#risks').value.split('\n').filter(l=>l.trim()).length; $('#riskCount').textContent=n+(n===1?' risk listed':' risks listed');}
+$('#feat').innerHTML=Object.entries(FEATURES).map(([k,f])=>`<option value="${k}">${f.name}</option>`).join('');
+$('#feat').onchange=()=>{ $('#specText').innerHTML=FEATURES[$('#feat').value].spec; answers={}; logs={}; stage=0; $('#risks').value=''; countRisks(); drawStage(); };
+function setMode(on){$('#mOn').setAttribute('aria-pressed',on);$('#mOff').setAttribute('aria-pressed',!on);$('#onArea').hidden=!on;$('#offArea').hidden=on; if(!on) $('#result').hidden=true; else drawStage();}
+$('#mOn').onclick=()=>setMode(true); $('#mOff').onclick=()=>setMode(false);
+$('#feat').onchange();
+</script>
+</body>
+</html>

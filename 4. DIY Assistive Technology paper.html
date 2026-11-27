@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StepCheck Builder – non-visual alert rule building</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#F2F5F7; --surface:#FFFFFF; --ink:#13233A; --muted:#4A5A6E; --line:#CDD6DF;
+  --accent:#0A5C86; --accent-ink:#FFFFFF; --accent-soft:#E1EEF5;
+  --warn:#8A4B00; --warn-soft:#FFF1DC; --err:#A3261A; --err-soft:#FCE6E3; --ok:#1C6B44; --ok-soft:#E2F3EA;
+  --focus:#C2410C;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0F1722; --surface:#172231; --ink:#E6EDF4; --muted:#A5B3C2; --line:#2C3B4E;
+  --accent:#5DB3E0; --accent-ink:#0B1520; --accent-soft:#1B3347;
+  --warn:#F5B65A; --warn-soft:#3A2A12; --err:#FF8E80; --err-soft:#3D1D1A; --ok:#6FD3A0; --ok-soft:#163327;
+  --focus:#FDBA74; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0F1722; --surface:#172231; --ink:#E6EDF4; --muted:#A5B3C2; --line:#2C3B4E;
+  --accent:#5DB3E0; --accent-ink:#0B1520; --accent-soft:#1B3347;
+  --warn:#F5B65A; --warn-soft:#3A2A12; --err:#FF8E80; --err-soft:#3D1D1A; --ok:#6FD3A0; --ok-soft:#163327;
+  --focus:#FDBA74; color-scheme:dark; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--accent);color:var(--accent-ink);padding:8px 12px;z-index:9}
+.skip:focus{left:8px}
+header.app{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding:22px 28px 16px;border-bottom:4px solid var(--accent);background:var(--surface)}
+header.app h1{margin:0;font-size:1.75rem;letter-spacing:-.01em}
+header.app p{margin:2px 0 0;color:var(--muted);max-width:60ch}
+.mode{display:flex;gap:0;border:2px solid var(--accent);border-radius:8px;overflow:hidden}
+.mode button{border:0;border-radius:0;background:transparent;color:var(--accent);padding:8px 14px;font-weight:700}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+main{padding:20px 28px 40px;max-width:1280px;margin:0 auto}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));align-items:start}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+section.panel>h2{margin:0 0 10px;font-size:1.15rem}
+h3{font-size:1rem;margin:14px 0 6px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--accent);color:var(--accent-ink);border:2px solid var(--accent);border-radius:7px;padding:7px 13px;cursor:pointer;font-weight:700}
+button.ghost{background:transparent;color:var(--accent)}
+button.small{padding:3px 9px;font-size:.88rem}
+button:disabled{opacity:.5;cursor:not-allowed}
+textarea,input[type=text],select{background:var(--bg);border:2px solid var(--line);border-radius:7px;padding:8px 10px;width:100%}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.muted{color:var(--muted)}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.82rem;font-weight:700}
+.tag.err{background:var(--err-soft);color:var(--err)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.issue{border-left:5px solid var(--err);background:var(--err-soft);border-radius:6px;padding:10px 12px;margin:10px 0}
+.issue.warn{border-color:var(--warn);background:var(--warn-soft)}
+.issue.ok{border-color:var(--ok);background:var(--ok-soft)}
+.issue h3{margin:0 0 4px}
+code.snip{display:block;white-space:pre-wrap;word-break:break-all;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:4px 7px;margin:6px 0;font-size:.82rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+footer.note{max-width:1280px;margin:0 auto;padding:0 28px 30px;color:var(--muted);font-size:.9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{header.app .mode,button{display:none}}
+
+.say{font-size:1.15rem;border-left:6px solid var(--accent);background:var(--accent-soft);padding:12px 14px;border-radius:6px;min-height:70px}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.choices button{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.choices button.fix{border-color:var(--warn);color:var(--warn)}
+.choices button.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.port{border:2px dashed var(--line);border-radius:8px;padding:8px;min-height:84px;font-size:.9rem}
+.port.filled{border-style:solid;border-color:var(--accent)}
+.port b{display:block}
+.rule{font-size:1.1rem;font-weight:700;padding:8px 0}
+#log li{font-size:.92rem;margin:3px 0}
+.metric{display:inline-block;margin-right:18px}
+.metric b{font-size:1.6rem;display:block;line-height:1.1}
+</style>
+</head>
+<body>
+<a class="skip" href="#guide">Skip to guide</a>
+<header class="app">
+  <div>
+    <h1>StepCheck Builder</h1>
+    <p>Build an “if this sensor, then this alert” rule with virtual modules. The guide speaks every step and works fully from the keyboard.</p>
+  </div>
+  <div class="row">
+    <div class="mode" role="group" aria-label="Study condition">
+      <button id="mOn" aria-pressed="true">Confirmation steps</button>
+      <button id="mOff" aria-pressed="false">No confirmation</button>
+    </div>
+    <label class="row" style="gap:6px"><input type="checkbox" id="speak" checked> Speak aloud</label>
+  </div>
+</header>
+<main>
+  <div class="row" style="margin-bottom:14px">
+    <label for="task" style="font-weight:700">Task</label>
+    <select id="task" style="width:auto">
+      <option value="t1">Task 1 – Doorway alert: distance sensor + vibration</option>
+      <option value="t2">Task 2 – Kettle alert: temperature sensor + sound</option>
+    </select>
+    <button class="ghost" id="restart">Restart task</button>
+  </div>
+  <div class="grid">
+    <section class="panel" id="guide" aria-labelledby="hG" tabindex="-1">
+      <h2 id="hG">Guide</h2>
+      <div class="say" id="say" aria-live="assertive"></div>
+      <div class="choices" id="choices"></div>
+      <div class="row"><button class="ghost" id="repeat">Repeat (R)</button><button class="ghost" id="help">Ask for help (H)</button></div>
+    </section>
+    <section class="panel" aria-labelledby="hB">
+      <h2 id="hB">Your build</h2>
+      <div class="rule" id="rule">Rule: not set yet</div>
+      <div class="board" id="board" aria-label="Board with four ports"></div>
+      <p class="muted" style="font-size:.9rem">Ports 1–2 take sensors. Ports 3–4 take alerts.</p>
+      <h3>Session</h3>
+      <div><span class="metric"><b id="mErr">0</b>setup errors</span><span class="metric"><b id="mHelp">0</b>help requests</span><span class="metric"><b id="mTime">0:00</b>time</span></div>
+      <ol id="log" class="muted"></ol>
+    </section>
+  </div>
+</main>
+<footer class="note">Wizard-of-Oz prototype for an Applied HCI course project (FAST-NUCES Karachi), inspired by Kosa et al., CHI 2026. The guide is scripted; no real AI or hardware is used. Keys: R repeat, H help, 1–9 choose an option.</footer>
+<script>
+const MODS={distance:{n:'Distance sensor',kind:'sensor',unit:'cm',cond:['closer than 50 cm','closer than 100 cm']},temperature:{n:'Temperature sensor',kind:'sensor',unit:'°C',cond:['above 40 °C','above 80 °C']},motion:{n:'Motion sensor',kind:'sensor',cond:['detects motion']},light:{n:'Light sensor',kind:'sensor',cond:['gets dark']},
+  vibration:{n:'Vibration module',kind:'alert'},sound:{n:'Sound buzzer',kind:'alert'},text:{n:'Text message to phone',kind:'alert'}};
+/* hidden physical faults seeded per task */
+const TASKS={t1:{sensor:'distance',alert:'vibration',goal:'Build a doorway alert: when something is closer than 50 cm, the vibration module should buzz.',faults:{distance:{attached:true,powered:true,facing:false},vibration:{attached:true,powered:false,facing:true}}},
+             t2:{sensor:'temperature',alert:'sound',goal:'Build a kettle alert: when the temperature is above 80 °C, the sound buzzer should beep.',faults:{temperature:{attached:false,powered:true,facing:true},sound:{attached:true,powered:true,facing:false}}}};
+const CHECKS={attached:{q:'Is it firmly attached?',bad:'You press the module. The plug moves a little: it is not fully clicked in.',good:'You press the module. It clicks and does not move. It is attached.',fix:'Push the plug in until it clicks'},
+              powered:{q:'Is it powered?',bad:'You feel the switch on the side. It is in the off position, toward the plug.',good:'The switch is on, away from the plug, and the module is slightly warm.',fix:'Slide the switch away from the plug'},
+              facing:{q:'Is it facing the right way?',bad:'The raised dot is on the bottom edge. The module is upside down, so the sensor faces the table.',good:'The raised dot is on the top edge. It is facing the right way.',fix:'Turn the module so the raised dot is on top'}};
+const $=s=>document.querySelector(s);
+let confirmMode=true, st, t0, errs=0, helps=0, step;
+function say(t){ $('#say').textContent=t; if($('#speak').checked && 'speechSynthesis' in window){speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.rate=1.05; speechSynthesis.speak(u);} }
+function log(t){ const li=document.createElement('li'); const s=Math.floor((Date.now()-t0)/1000); li.textContent=`[${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}] ${t}`; $('#log').appendChild(li); }
+function choices(arr){ const c=$('#choices'); c.innerHTML=''; arr.forEach((o,i)=>{const b=document.createElement('button'); b.textContent=(i+1)+'. '+o.t; if(o.cls) b.className=o.cls; b.onclick=o.f; c.appendChild(b);}); const f=c.querySelector('button'); if(f) f.focus(); }
+function board(){ $('#board').innerHTML=[1,2,3,4].map(p=>{const m=st.ports[p]; return `<div class="port ${m?'filled':''}"><b>Port ${p}</b>${m?MODS[m].n:'<span class="muted">empty</span>'}</div>`}).join('');
+  $('#rule').textContent= st.sensor? `Rule: IF ${MODS[st.sensor].n.toLowerCase()} ${st.cond||'…'} THEN ${st.alert?MODS[st.alert].n.toLowerCase():'…'}` : 'Rule: not set yet'; }
+function metrics(){ $('#mErr').textContent=errs; $('#mHelp').textContent=helps; }
+setInterval(()=>{ if(!t0) return; const s=Math.floor((Date.now()-t0)/1000); $('#mTime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },1000);
+
+function start(){
+  const T=TASKS[$('#task').value];
+  st={T,ports:{},state:JSON.parse(JSON.stringify(T.faults)),sensor:null,alert:null,cond:null,done:false};
+  errs=0;helps=0;t0=Date.now(); $('#log').innerHTML=''; metrics(); board();
+  log('Task started ('+(confirmMode?'confirmation':'no confirmation')+')');
+  step=()=>{ say(T.goal+' First, choose a sensor.'); choices(Object.entries(MODS).filter(([k,m])=>m.kind==='sensor').map(([k,m])=>({t:m.n,f:()=>pickSensor(k)}))); }; step();
+}
+function stateOf(k){ return st.state[k]||{attached:true,powered:true,facing:true}; }
+function pickSensor(k){ st.sensor=k; log('Chose '+MODS[k].n); board();
+  step=()=>{ say(`You picked the ${MODS[k].n}. Which port will you plug it into? Ports 1 and 2 are for sensors.`); choices([1,2,3,4].map(p=>({t:'Port '+p,f:()=>place(k,p,'sensor')}))); }; step(); }
+function place(k,p,kind){
+  if((kind==='sensor'&&p>2)||(kind==='alert'&&p<3)){ errs++; metrics(); log('Setup error: '+MODS[k].n+' in wrong port '+p); say(`Port ${p} does not take ${kind}s. Try again.`); return; }
+  st.ports[p]=k; board(); log(MODS[k].n+' placed in port '+p);
+  if(confirmMode) confirm(k,()=> kind==='sensor'?askAlert():askCond()); else (kind==='sensor'?askAlert():askCond());
+}
+function confirm(k,next){
+  step=()=>{ say(`Before we go on, let’s check the ${MODS[k].n} by touch. Check each item, then confirm.`);
+    const s=stateOf(k);
+    const opts=Object.entries(CHECKS).map(([c,C])=>({t:C.q,f:()=>{ const ok=s[c]; log('Checked '+c+' on '+MODS[k].n+': '+(ok?'OK':'problem'));
+        say(ok?C.good:C.bad+' Choose the fix, or check something else.');
+        if(!ok) choices([{t:C.fix,cls:'fix',f:()=>{s[c]=true; log('Fixed '+c+' on '+MODS[k].n); say('Done. '+C.good+' Choose another check, or confirm.'); setTimeout(()=>choices(opts),10);}}, {t:'Back to checks',f:()=>choices(opts)}]);
+      }}));
+    opts.push({t:'Everything is checked. Continue',cls:'go',f:next});
+    choices(opts); }; step(); }
+function askAlert(){ step=()=>{ say('Now choose how you want to be alerted.'); choices(Object.entries(MODS).filter(([k,m])=>m.kind==='alert').map(([k,m])=>({t:m.n,f:()=>{st.alert=k;log('Chose '+m.n);board(); step=()=>{say(`Which port for the ${m.n}? Ports 3 and 4 are for alerts.`);choices([1,2,3,4].map(p=>({t:'Port '+p,f:()=>place(k,p,'alert')})));};step();}}))); }; step(); }
+function askCond(){ step=()=>{ say(`When should the ${MODS[st.alert].n.toLowerCase()} go off?`); choices(MODS[st.sensor].cond.map(c=>({t:'When it is '+c,f:()=>{st.cond=c;log('Condition: '+c);board();askTest();}}))); }; step(); }
+function askTest(){ step=()=>{ say('Your rule is ready. Test it now?'); choices([{t:'Test the rule',cls:'go',f:test},{t:'Inspect a module first',f:inspectMenu}]); }; step(); }
+function inspectMenu(){ const mods=[st.sensor,st.alert]; step=()=>{ say('Which module do you want to inspect?'); choices(mods.map(k=>({t:MODS[k].n,f:()=>confirm(k,askTest)})).concat([{t:'Back',f:askTest}])); }; step(); }
+function test(){
+  const T=st.T; const probs=[];
+  if(st.sensor!==T.sensor||st.alert!==T.alert) probs.push('wrong module');
+  [st.sensor,st.alert].forEach(k=>{const s=stateOf(k); Object.keys(CHECKS).forEach(c=>{if(!s[c]) probs.push(c+' '+MODS[k].n);});});
+  const want=T.sensor==='distance'?'closer than 50 cm':'above 80 °C'; if(st.cond!==want) probs.push('condition');
+  if(!probs.length){ log('Test passed'); const s=Math.floor((Date.now()-t0)/1000);
+    say(`Test passed. The alert went off as expected. You finished in ${Math.floor(s/60)} minutes ${s%60} seconds with ${errs} setup errors. How confident are you that the build is correct, from 1 (not at all) to 7 (completely)?`);
+    choices([1,2,3,4,5,6,7].map(n=>({t:String(n),f:()=>{log('Confidence rating: '+n); say('Thank you. Tell the researcher you are done.'); choices([]);}}))); return; }
+  errs++; metrics(); log('Setup error: test failed ('+probs.join(', ')+')');
+  say(confirmMode? 'The test failed. Something in the setup is not right. You can inspect each module, or ask for help.' : 'The test failed. Nothing happened. Ask for help or try again.');
+  choices([{t:'Test again',f:test},{t:'Inspect a module',f:inspectMenu},{t:'Ask for help',f:help}]);
+}
+function help(){ helps++; metrics(); log('Help requested');
+  const k=[st.sensor,st.alert].find(k=>k&&Object.values(stateOf(k)).includes(false));
+  say(k?`Hint: check the ${MODS[k].n}. Something about how it is attached, powered or facing may be wrong.`: 'Hint: make sure the sensor, alert and condition match the task: '+st.T.goal);
+  setTimeout(()=>{ if(!st.done) step(); }, 6000);
+}
+$('#repeat').onclick=()=>step&&step(); $('#help').onclick=help; $('#restart').onclick=start; $('#task').onchange=start;
+document.addEventListener('keydown',e=>{ if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+  if(e.key==='r'||e.key==='R') step&&step(); else if(e.key==='h'||e.key==='H') help();
+  else if(/^[1-9]$/.test(e.key)){ const b=$('#choices').querySelectorAll('button')[+e.key-1]; if(b) b.click(); } });
+function setMode(on){confirmMode=on;$('#mOn').setAttribute('aria-pressed',on);$('#mOff').setAttribute('aria-pressed',!on);start();}
+$('#mOn').onclick=()=>setMode(true);$('#mOff').onclick=()=>setMode(false);
+$('#speak').checked=false; start(); $('#speak').checked=true;
+</script>
+</body>
+</html>
